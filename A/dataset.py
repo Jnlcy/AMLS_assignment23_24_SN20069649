@@ -1,14 +1,12 @@
 
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+
 import random
-import cv2
 import os
-from tqdm import tqdm
 import skimage
 from skimage.util import montage as skimage_montage
 from PIL import Image
+BATCH_SIZE = 128
 
 
 datapath = 'Datasets/pneumoniamnist.npz'
@@ -68,28 +66,36 @@ def montage2d(imgs, n_channels, sel):
     return montage_img
 
 '''------- Copied exactly from the MEDMNIST repo: https://github.com/MedMNIST/MedMNIST/blob/main/examples/dataset_without_pytorch.py#L132-------'''
+
+
+#This function visualizes the dataset and save in the folder'save_folder'
+def montage_and_save(imgs, length = 20):
+    n_sel = length * length
+    sel = np.random.choice(imgs.shape[0], size=n_sel, replace=False)
+
+    montage_img = montage2d(imgs=imgs,
+                            n_channels=n_channels,
+                            sel=sel)
+
+
+    save_folder = 'save_folder'
+    if save_folder is not None:
+        if not os.path.exists(save_folder):
+            os.makedirs(save_folder)
+        montage_img.save(os.path.join(save_folder,
+                                        f"task_A_train_montage.jpg"))
+    return montage_img
+
+
+
+
 npz = np.load(datapath)
-# print(npz_file.files)
+
 print(npz['train_labels'])
-BATCH_SIZE = 128
-train_images = npz['train_images']
-train_loader = get_loader(dataset=train_images, batch_size=BATCH_SIZE)
-
-length = 20
-n_sel = length * length
-sel = np.random.choice(train_images.shape[0], size=n_sel, replace=False)
-
-montage_img = montage2d(imgs=train_images,
-                        n_channels=n_channels,
-                        sel=sel)
 
 
 
-save_folder = 'save_folder'
-if save_folder is not None:
-    if not os.path.exists(save_folder):
-        os.makedirs(save_folder)
-    montage_img.save(os.path.join(save_folder,
-                                    f"task_A_train_montage.jpg"))
+
+
 
 
