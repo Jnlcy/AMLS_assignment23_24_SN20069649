@@ -1,4 +1,4 @@
-
+""""""
 import numpy as np
 
 import random
@@ -89,9 +89,6 @@ def montage_and_save(imgs, length = 20):
 
 
 
-npz = np.load(datapath)
-
-print(npz['train_labels'])
 
 
 
