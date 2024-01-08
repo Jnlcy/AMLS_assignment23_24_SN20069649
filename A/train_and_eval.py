@@ -1,7 +1,7 @@
 import numpy as np
 import os
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV
+# from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -92,7 +92,7 @@ def model_selection(X_train,X_val,y_train,y_val, evaluation_metric='accuracy'):
         print("-" * 40)
 
     report_df.to_csv('classification_report.xlsx', index=False)
-    print(f'The best classifier on validation set is {classifier_name}')
+    print(f'The best classifier on validation set is {best_model_name}')
     return best_model_name,best_model
 #model_selection(X_train,X_val,y_train,y_val)
 # confusion matrix
@@ -139,7 +139,7 @@ def load_trained_model():
         print("Trained model does not exist, train the model first")
     return
 #train model save model and predict
-def train_save_pneu():
+def train_and_save_classify():
 
     data_flag = 'pneumoniamnist'
     X_train,X_val,X_test,y_train,y_val,y_test =load_dataset(data_flag)
@@ -163,7 +163,7 @@ def train_save_pneu():
 
 
 #train_save_pneu()
-load_trained_model()
+#load_trained_model()
 
 '''param_grid = {
     'n_estimators': [300,400,600,1000],  # Number of trees in the forest
