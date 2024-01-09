@@ -3,12 +3,16 @@ from A.train_and_eval_A import *
 
 def main():
 
-    '''Task A: The3re are two options: 
+    '''Task A: There are two options: 
     (1) Select,train and save a new model according to data and then evaluate it
     (2) Predict and evaluate using the already trained model'''
     
     
     print("Welcome to task A: Pneumonia classification")
+
+    model_filename ="pneumoniamnist_model.pkl"
+    data_flag = 'pneumoniamnist'
+    folder = 'A/'
 
     while True:
         print("\nOptions:")
@@ -23,7 +27,7 @@ def main():
             train_and_save_classify()
         elif choice == '2':
             print("\nDeploying a pre-trained model...")
-            load_trained_model()
+            load_trained_model(folder,model_filename,data_flag)
         elif choice == '3':
             print("\nExiting the Pneumonia Detection System.")
             break

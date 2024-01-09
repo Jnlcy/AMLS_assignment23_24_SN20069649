@@ -108,19 +108,17 @@ def confusion_matrix_plot(y_test,y_pred):
     plt.title("Confusion Matrix")
     plt.show()
     return
-def save_trained_model(best_classifier):
-    folder = "./A"
-    # Define the filename for the saved model
-    model_filename = os.path.join(folder,'pneumoniamnist_model.pkl')
+def save_trained_model(best_classifier,model_filename):
+    
     # Save the trained model to a file
     joblib.dump(best_classifier, model_filename)
 
     print(f"Trained model saved as {model_filename}")
     return
 #load pretrained model and predict
-def load_trained_model():
-    model_filename ="pneumoniamnist_model.pkl"
-    model_path = os.path.join('./A',model_filename)
+def load_trained_model(folder,model_filename,data_flag):
+    
+    model_path = os.path.join(folder,model_filename)
     data_flag = 'pneumoniamnist'
     X_train,X_val,X_test,y_train,y_val,y_test =load_dataset(data_flag)
     X_train,X_val,X_test = data_scaling(X_train,X_val,X_test)
@@ -151,7 +149,11 @@ def train_and_save_classify():
     best_classifier.fit(X_train, y_train.ravel())
 
     #save the trained classifier
-    save_trained_model(best_classifier)
+    folder = "./A"
+    # Define the filename for the saved model
+    model_filename = os.path.join(folder,'pneumoniamnist_model.pkl')
+
+    save_trained_model(best_classifier,model_filename)
     # Evaluate the best classifier on the test set
     y_pred = best_classifier.predict(X_test)
 
