@@ -1,9 +1,9 @@
-from A.train_and_eval import *
+from A.train_and_eval_A import *
 
 
 def main():
 
-    '''Task A: There are two options: 
+    '''Task A: The3re are two options: 
     (1) Select,train and save a new model according to data and then evaluate it
     (2) Predict and evaluate using the already trained model'''
     

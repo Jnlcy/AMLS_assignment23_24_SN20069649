@@ -1,4 +1,4 @@
-""""""
+
 import numpy as np
 
 import random
@@ -24,7 +24,7 @@ datapath = 'Datasets/pneumoniamnist.npz'
   
 n_channels = 1
 n_classes = 2
-
+dataflag = 'pneumoniamnist'
 # load dataset
 
 def get_loader(dataset, batch_size):
@@ -37,6 +37,7 @@ def get_loader(dataset, batch_size):
             idx = next(index_generator)
             data.append(dataset[idx])
         yield dataset._collate_fn(data)
+
 
 
 def shuffle_iterator(iterator):
@@ -69,7 +70,7 @@ def montage2d(imgs, n_channels, sel):
 
 
 #This function visualizes the dataset and save in the folder'save_folder'
-def montage_and_save(imgs, length = 20):
+def montage_and_save(dataflag,imgs,n_channels, length = 20):
     n_sel = length * length
     sel = np.random.choice(imgs.shape[0], size=n_sel, replace=False)
 
@@ -83,7 +84,7 @@ def montage_and_save(imgs, length = 20):
         if not os.path.exists(save_folder):
             os.makedirs(save_folder)
         montage_img.save(os.path.join(save_folder,
-                                        f"task_A_train_montage.jpg"))
+                                        f"train_montage_{dataflag}.jpg"))
     return montage_img
 
 
@@ -91,8 +92,13 @@ def montage_and_save(imgs, length = 20):
 
 
 
-
-
+'''npz = np.load(datapath)
+# print(npz_file.files)
+print(npz['train_labels'])
+BATCH_SIZE = 128
+train_images = npz['train_images']
+train_loader = get_loader(dataset=train_images, batch_size=BATCH_SIZE)
+montage_and_save(train_images,dataflag,n_channels)'''
 
 
 
