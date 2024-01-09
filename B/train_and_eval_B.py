@@ -1,6 +1,6 @@
 import sys
 import os
-
+import matplotlib.pyplot as plt
 sys.path.append('./')
 
 
@@ -10,6 +10,7 @@ folder = 'B/'
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras import layers
 
 model_filename = "pathmnist_model.h5"
 data_flag = 'pathmnist'
@@ -24,12 +25,12 @@ def get_data(data_flag):
     y_test = dataset['test_labels']
     x_val = dataset['val_images']
     y_val = dataset['val_labels']
-
+    #normalizing
     X_train = x_train/255.0
     X_test = x_test/255.0
     X_val = x_val/255.0
     
-
+    print(X_train[0].shape)
 
     return X_train, y_train, X_test, y_test,X_val,y_val
 
@@ -42,16 +43,20 @@ test_labels = tf.keras.utils.to_categorical(test_labels, num_classes=9)
 val_labels = tf.keras.utils.to_categorical(val_labels, num_classes=9)
 
 # Define the MLP model using Keras Sequential API
-model = tf.keras.Sequential([
-    tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 3)),
-    tf.keras.layers.MaxPooling2D((2, 2)),
-    tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
-    tf.keras.layers.MaxPooling2D((2, 2)),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(128, activation='relu'),
-    tf.keras.layers.Dense(9, activation='softmax')
-])
+model = tf.keras.Sequential(name = 'Firstmodel')
 
+model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 3)))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Dropout(.2, name='Dropout1'))
+model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+
+model.add(layers.Flatten())
+model.add(layers.Dropout(.2, name='Dropout2'))
+model.add(layers.Dense(128, activation='relu',
+                       kernel_regularizer=tf.keras.regularizers.L1(0.01)))
+model.add(layers.Dense(9, activation='softmax',kernel_regularizer=tf.keras.regularizers.L1(0.01)))
+model.summary()
 # Compile the model
 model.compile(optimizer='adam',
               loss='categorical_crossentropy',
@@ -64,31 +69,49 @@ early_stopping = tf.keras.callbacks.EarlyStopping(
     restore_best_weights=True  # Restores model weights from the epoch with the best value of the monitored metric
 )
 
-checkpoint = tf.keras.callbacks.ModelCheckpoint('model_checkpoint.h5', save_best_only=True, monitor='val_loss', mode='min')
-
 #data augmentation
 datagen = ImageDataGenerator(
-    rotation_range=20,
-    width_shift_range=0.2,
-    height_shift_range=0.2,
+    rotation_range=10,
+    width_shift_range=0.1,
+    height_shift_range=0.1,
     shear_range=0.2,
-    zoom_range=0.2,
-    horizontal_flip=True,
+    zoom_range=0.1,
+    horizontal_flip=False,
     fill_mode='nearest')
-
-# Fit the generator to your data
+    # Fit the generator to your data
 datagen.fit(training_images)
 
-# Train the model with data augmentation
-model.fit(datagen.flow(training_images, training_labels, batch_size=32),
-          epochs=100,
-          validation_data=(val_images, val_labels),
-          callbacks=[early_stopping, checkpoint],
-          verbose=1)  # Verbose for detailed output
 
+
+epochs = 50
+# Train the model
+history = model.fit(datagen.flow(training_images, training_labels, batch_size=32),
+          epochs=epochs,
+          validation_data=(val_images, val_labels),
+          callbacks=[early_stopping])
 # Evaluate the model
 test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
 print('\nTest accuracy:', test_acc)
+
+
+#plot history
+fig, (ax1, ax2) = plt.subplots(1,2, figsize=(16,6))
+title_fontsize = 16
+axis_fontsize = 12
+
+ax1.plot(range(1,len(history.history['loss'])+1), history.history['loss'], label='Training loss')
+ax1.plot(range(1,len(history.history['loss'])+1), history.history['val_loss'], label='Validation Loss')
+ax1.legend()
+ax1.set_xticks(range(1,len(history.history['loss'])+1,3))
+ax1.set_title('Loss', fontsize=title_fontsize)
+ax1.set_xlabel('Epoch', fontsize=axis_fontsize)
+
+ax2.plot(range(1,len(history.history['loss'])+1), history.history['accuracy'], label='Training Accuracy')
+ax2.plot(range(1,len(history.history['loss'])+1), history.history['val_accuracy'], label='Validation Accuracy')
+ax2.legend()
+ax2.set_xticks(range(1,len(history.history['loss'])+1,3))
+ax2.set_title('Accuracy', fontsize=title_fontsize)
+ax2.set_xlabel('Epoch', fontsize=axis_fontsize) 
 
 # Save the model
 model.save(os.path.join(folder,model_filename))
