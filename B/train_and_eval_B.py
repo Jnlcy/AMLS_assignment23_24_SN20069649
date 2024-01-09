@@ -3,14 +3,13 @@ import os
 
 sys.path.append('./')
 
-from A.train_and_eval_A import load_dataset,data_scaling,save_trained_model,load_trained_model
 
 
 folder = 'B/'
 
 import tensorflow as tf
 import numpy as np
-
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 model_filename = "pathmnist_model.h5"
 data_flag = 'pathmnist'
@@ -35,11 +34,12 @@ def get_data(data_flag):
     return X_train, y_train, X_test, y_test,X_val,y_val
 
 # Load and preprocess your data
-training_images, training_labels, test_images, test_labels = get_data(data_flag)
+training_images, training_labels, test_images, test_labels,val_images, val_labels = get_data(data_flag)
 
 # Convert labels to one-hot encoding
 training_labels = tf.keras.utils.to_categorical(training_labels, num_classes=9)
 test_labels = tf.keras.utils.to_categorical(test_labels, num_classes=9)
+val_labels = tf.keras.utils.to_categorical(val_labels, num_classes=9)
 
 # Define the MLP model using Keras Sequential API
 model = tf.keras.Sequential([
@@ -64,9 +64,27 @@ early_stopping = tf.keras.callbacks.EarlyStopping(
     restore_best_weights=True  # Restores model weights from the epoch with the best value of the monitored metric
 )
 
+checkpoint = tf.keras.callbacks.ModelCheckpoint('model_checkpoint.h5', save_best_only=True, monitor='val_loss', mode='min')
 
-# Train the model
-model.fit(training_images, training_labels, epochs=100, batch_size=128, validation_split=0.2,callbacks=[early_stopping])
+#data augmentation
+datagen = ImageDataGenerator(
+    rotation_range=20,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    shear_range=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True,
+    fill_mode='nearest')
+
+# Fit the generator to your data
+datagen.fit(training_images)
+
+# Train the model with data augmentation
+model.fit(datagen.flow(training_images, training_labels, batch_size=32),
+          epochs=100,
+          validation_data=(val_images, val_labels),
+          callbacks=[early_stopping, checkpoint],
+          verbose=1)  # Verbose for detailed output
 
 # Evaluate the model
 test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
