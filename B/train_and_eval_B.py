@@ -36,7 +36,7 @@ def get_data(data_flag):
 
 # Load and preprocess your data
 training_images, training_labels, test_images, test_labels,val_images, val_labels = get_data(data_flag)
-shuffle_indices = np.random.permutation(len(preprocessed_images))
+
 # Convert labels to one-hot encoding
 training_labels = tf.keras.utils.to_categorical(training_labels, num_classes=9)
 test_labels = tf.keras.utils.to_categorical(test_labels, num_classes=9)
@@ -50,12 +50,16 @@ model.add(layers.MaxPooling2D((2, 2)))
 
 model.add(layers.Conv2D(64, (3, 3), activation='relu'))
 model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Dropout(0.25, name='Dropout2'))
 
 model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
 model.add(layers.Flatten())
-model.add(layers.Dense(128, activation='relu' ))
 
+model.add(layers.Dense(128, activation='relu' ))
+model.add(layers.Dense(64, activation='relu' ))
 model.add(layers.Dropout(0.25, name='Dropout3'))
+
 model.add(layers.Dense(9, activation='softmax'))
 model.summary()
 
