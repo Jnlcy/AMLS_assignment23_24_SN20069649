@@ -79,9 +79,8 @@ def model_selection(X_train,X_val,y_train,y_val, evaluation_metric='accuracy'):
         # Print classification report
         report = classification_report(y_val, y_pred, target_names=['Normal', 'Pneumonia'])
 
-
         # Append the classification report to the DataFrame
-        report_df = report_df.append({'Classifier': classifier_name, 'Classification Report': report}, ignore_index=True)
+        
         print(report)
         # Check if this model is the best based on the chosen metric
         if metric_value > best_metric_value:
@@ -91,7 +90,7 @@ def model_selection(X_train,X_val,y_train,y_val, evaluation_metric='accuracy'):
 
         print("-" * 40)
 
-    report_df.to_csv('classification_report.xlsx', index=False)
+    
     print(f'The best classifier on validation set is {best_model_name}')
     return best_model_name,best_model
 #model_selection(X_train,X_val,y_train,y_val)
