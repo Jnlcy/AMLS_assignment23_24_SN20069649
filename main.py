@@ -1,5 +1,4 @@
 from A.train_and_eval_A import *
-from B.load_and_eval_B import *
 from B.train_and_eval_B import *
 
 
