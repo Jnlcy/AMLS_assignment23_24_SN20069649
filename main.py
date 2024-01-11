@@ -1,5 +1,6 @@
 from A.train_and_eval_A import *
 from B.load_and_eval_B import *
+from B.train_and_eval_B import *
 
 
 def main():
@@ -70,7 +71,7 @@ def main():
 
                 if choice == '1':
                     print("\nTraining a new model...")
-                    pass
+                    train_and_eval_B()
                 elif choice == '2':
                     print("\nDeploying a pre-trained model...")
                     load_CNN_model(data_flag)

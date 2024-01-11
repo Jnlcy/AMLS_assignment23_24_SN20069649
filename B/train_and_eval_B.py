@@ -5,43 +5,115 @@ sys.path.append('./')
 
 
 
-folder = 'B/'
-
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras import layers
 from keras.models import Sequential
 
-model_filename = "pathmnist_model.h5"
-data_flag = 'pathmnist'
 
-def get_data(data_flag):
-    input_root = 'Datasets/'
+
+#preprocess
+def load_and_preprocess_data(data_flag, input_root='Datasets/'):
+    dataset = np.load(os.path.join(input_root, "{}.npz".format(data_flag)))
+    x_train, y_train = dataset['train_images'] / 255.0, dataset['train_labels']
+    x_test, y_test = dataset['test_images'] / 255.0, dataset['test_labels']
+    x_val, y_val = dataset['val_images'] / 255.0, dataset['val_labels']
+
+    y_train = tf.keras.utils.to_categorical(y_train, num_classes=9)
+    y_test = tf.keras.utils.to_categorical(y_test, num_classes=9)
+    y_val = tf.keras.utils.to_categorical(y_val, num_classes=9)
+
+    return x_train, y_train, x_test, y_test, x_val, y_val
+
+#model definition
+def create_model():
+    model = tf.keras.Sequential(name='Firstmodel')
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 3)))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(layers.Flatten())
+    model.add(layers.Dense(128, activation='relu'))
+    model.add(layers.Dropout(0.25, name='Dropout3'))
+    model.add(layers.Dense(9, activation='softmax'))
     
-    dataset= np.load(os.path.join(input_root, "{}.npz".format(data_flag)))
-    x_train = dataset['train_images']
-    y_train = dataset['train_labels']
-    x_test =  dataset['test_images']
-    y_test = dataset['test_labels']
-    x_val = dataset['val_images']
-    y_val = dataset['val_labels']
-    #normalizing
-    X_train = x_train/255.0
-    X_test = x_test/255.0
-    X_val = x_val/255.0
-    
-    print(X_train[0].shape)
+    model.compile(optimizer=tf.optimizers.Adam(),
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+    return model
 
-    return X_train, y_train, X_test, y_test,X_val,y_val
+#training function
+def train_model(model, training_images, training_labels, val_images, val_labels, epochs=50):
+    early_stopping = tf.keras.callbacks.EarlyStopping(
+        monitor='val_loss', patience=3, restore_best_weights=True)
+
+    datagen = ImageDataGenerator(rotation_range=10, width_shift_range=0.1,
+                                 height_shift_range=0.1, shear_range=0.2,
+                                 zoom_range=0.1, horizontal_flip=False,
+                                 fill_mode='nearest')
+    datagen.fit(training_images)
+
+    history = model.fit(datagen.flow(training_images, training_labels, batch_size=16),
+                        epochs=epochs, validation_data=(val_images, val_labels),
+                        callbacks=[early_stopping])
+    return history
+
+#evaluating function
+def evaluate_model(model, test_images, test_labels):
+    test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
+    print('\nTest accuracy:', test_acc)
+    return test_loss, test_acc
+
+# plotting function
+def plot_training_history(history):
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+    ax1.plot(range(1, len(history.history['loss']) + 1), history.history['loss'], label='Training loss')
+    ax1.plot(range(1, len(history.history['loss']) + 1), history.history['val_loss'], label='Validation Loss')
+    ax1.legend()
+    ax1.set_xticks(range(1, len(history.history['loss']) + 1, 3))
+    ax1.set_title('Loss', fontsize=16)
+    ax1.set_xlabel('Epoch', fontsize=12)
+
+    ax2.plot(range(1, len(history.history['loss']) + 1), history.history['accuracy'], label='Training Accuracy')
+    ax2.plot(range(1, len(history.history['loss']) + 1), history.history['val_accuracy'], label='Validation Accuracy')
+    ax2.legend()
+    ax2.set_xticks(range(1, len(history.history['loss']) + 1, 3))
+    ax2.set_title('Accuracy', fontsize=16)
+    ax2.set_xlabel('Epoch', fontsize=12)
+    plt.show()
+    return
 
 
+#save the model
+def save_model(model, folder, model_filename):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    model_path = os.path.join(folder, model_filename)
+    model.save(model_path)
+
+
+# Load and preprocess data
+def train_and_eval_B():
+    x_train, y_train, x_test, y_test, x_val, y_val = load_and_preprocess_data('pathmnist')
+
+    # Create and train model
+    model = create_model()
+    history = train_model(model, x_train, y_train, x_val, y_val)
+
+    # Evaluate and save model
+    evaluate_model(model, x_test, y_test)
+    plot_training_history(history)
+    save_model(model, 'B/', 'pathmnist_model.h5')
+    return
+
+
+'''
 # Load and preprocess your data
 training_images, training_labels, test_images, test_labels,val_images, val_labels = get_data(data_flag)
 
-training_images=tf.image.resize(training_images,(64,64))
-test_images =tf.image.resize(test_images,(64,64))
-val_images=tf.image.resize(test_images,(64,64))
+
 
 # Convert labels to one-hot encoding
 training_labels = tf.keras.utils.to_categorical(training_labels, num_classes=9)
@@ -55,41 +127,32 @@ val_labels = tf.keras.utils.to_categorical(val_labels, num_classes=9)
 
 
 # Define the MLP model using Keras Sequential API
-model=Sequential([
-    layers.Conv2D(filters=128, kernel_size=(11,11), strides=(4,4), activation='relu', input_shape=(64,64,3)),
-    layers.BatchNormalization(),
-    layers.MaxPool2D(pool_size=(2,2)),
-    layers.Conv2D(filters=256, kernel_size=(5,5), strides=(1,1), activation='relu', padding="same"),
-    layers.BatchNormalization(),
-    layers.MaxPool2D(pool_size=(3,3)),
-    layers.Conv2D(filters=256, kernel_size=(3,3), strides=(1,1), activation='relu', padding="same"),
-    layers.BatchNormalization(),
-    layers.Conv2D(filters=256, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same"),
-    layers.BatchNormalization(),
-    layers.Conv2D(filters=256, kernel_size=(1,1), strides=(1,1), activation='relu', padding="same"),
-    layers.BatchNormalization(),
-    layers.MaxPool2D(pool_size=(2,2)),
-    layers.Flatten(),
-    layers.Dense(1024,activation='relu'),
-    layers.Dropout(0.5),
-    layers.Dense(1024,activation='relu'),
-    layers.Dropout(0.5),
-    layers.Dense(9,activation='softmax')  
-    
-    
-])
+model = tf.keras.Sequential(name = 'Firstmodel')
 
+model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 3)))
+model.add(layers.MaxPooling2D((2, 2)))
 
+model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+
+model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.Flatten())
+model.add(layers.Dense(128, activation='relu' ))
+
+model.add(layers.Dropout(0.25, name='Dropout3'))
+model.add(layers.Dense(9, activation='softmax'))
 model.summary()
+
+
 # Compile the model
-model.compile(optimizer=tf.optimizers.Adam(learning_rate= 0.001),
+model.compile(optimizer=tf.optimizers.Adam(),
               loss='categorical_crossentropy',
               metrics=['accuracy'])
 
 # Early stopping callback
 early_stopping = tf.keras.callbacks.EarlyStopping(
     monitor='val_loss',  # Monitor the validation loss
-    patience=5,         # Number of epochs with no improvement after which training will be stopped
+    patience=3,         # Number of epochs with no improvement after which training will be stopped
     restore_best_weights=True  # Restores model weights from the epoch with the best value of the monitored metric
 )
 
@@ -109,7 +172,7 @@ datagen.fit(training_images)
 
 epochs = 50
 # Train the model
-history = model.fit(datagen.flow(training_images, training_labels, batch_size=32),
+history = model.fit(datagen.flow(training_images, training_labels, batch_size=16),
           epochs=epochs,
           validation_data=(val_images, val_labels),
           callbacks=[early_stopping])
@@ -141,3 +204,4 @@ plt.show()
 
 # Save the model
 model.save(os.path.join(folder,model_filename))
+'''
