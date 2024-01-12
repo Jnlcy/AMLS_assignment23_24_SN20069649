@@ -9,6 +9,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
+from sklearn.model_selection import GridSearchCV
 import matplotlib.pyplot as plt
 import joblib
 
@@ -58,7 +59,6 @@ def model_selection(X_train,X_val,y_train,y_val, evaluation_metric='accuracy'):
     best_model_name = None
     best_metric_value = -1  # Initialize with a low value for accuracy
 
-    report_df = pd.DataFrame(columns=['Classifier', 'Classification Report'])
     # Iterate through classifiers and evaluate their performance
     for classifier_name, classifier in classifiers:
         print(f"Evaluating {classifier_name}...")
@@ -144,6 +144,59 @@ def train_and_save_classify():
 
     best_classifier_name,best_classifier = model_selection(X_train,X_val,y_train,y_val)
 
+    #hyperparameter selection
+    if best_classifier_name == 'Support Vector Machine':
+        param_grid = {
+        'C': [0.1, 1, 10, 100],  # Regularization parameter
+        'gamma': ['scale', 'auto', 0.001, 0.0001],  # Kernel coefficient for 'rbf', 'poly' and 'sigmoid'
+        'kernel': ['rbf', 'linear']  # Specifies the kernel type to be used in the algorithm
+        }
+
+        # Create an SVC (Support Vector Classifier) object
+        classifier = SVC()
+
+        
+        
+
+       
+
+    elif best_classifier_name == 'Random Forest':
+        param_grid = {
+        'n_estimators': [100,300,1000],  # Number of trees in the forest
+        'max_depth': [None, 10, 20, 30],  # Maximum depth of each tree
+        'min_samples_split': [2, 5],  # Minimum number of samples required to split an internal node
+        'min_samples_leaf': [1, 2]  # Minimum number of samples required to be at a leaf node
+        }
+
+        # Create the Random Forest classifier
+        classifier = RandomForestClassifier(random_state=42)
+
+    
+
+    elif best_classifier_name == 'K-Nearest Neighbors':
+        param_grid = {
+        'n_neighbors': [3, 5, 7, 10],  # Number of neighbors to use
+        'weights': ['uniform', 'distance'],  # Weight function used in prediction
+        'algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute'],  # Algorithm used to compute the nearest neighbors
+        'p': [1, 2]  # Power parameter for the Minkowski metric
+        }
+
+        # Create a KNeighborsClassifier object
+        classifier = KNeighborsClassifier()
+
+    # Create a GridSearchCV object  and parameter grid
+    grid_search = GridSearchCV(classifier, param_grid, cv=5, scoring='accuracy', verbose=2,n_jobs=-1)
+
+    # Fit the GridSearchCV object to find the best parameters
+    grid_search.fit(X_train, y_train.ravel())
+
+    # Print out the best parameters and the best score
+    print("Best parameters found: ", grid_search.best_params_)
+    print("Best cross-validation score: {:.2f}".format(grid_search.best_score_))
+
+
+
+
     # Train the best classifier on the full training set
     best_classifier.fit(X_train, y_train.ravel())
 
@@ -162,7 +215,7 @@ def train_and_save_classify():
     confusion_matrix_plot(y_test,y_pred)
     return
 
-
+#train_and_save_classify()
 #train_save_pneu()
 #load_trained_model()
 
