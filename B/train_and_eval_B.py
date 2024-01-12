@@ -1,6 +1,7 @@
 import sys
 import os
 import matplotlib.pyplot as plt
+
 sys.path.append('./')
 
 
@@ -59,12 +60,15 @@ def create_model():
     model.add(layers.Conv2D(64, (3, 3), activation='relu'))
     model.add(layers.Flatten())
     model.add(layers.Dense(128, activation='relu'))
-    model.add(layers.Dropout(0.25, name='Dropout3'))
+    model.add(layers.Dropout(0.25))
     model.add(layers.Dense(9, activation='softmax'))
     
     model.compile(optimizer=tf.optimizers.Adam(),
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
+    
+    model.summary()
+    
     return model
 
 #training function

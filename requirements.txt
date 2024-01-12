@@ -11,3 +11,5 @@ tensorflow==2.5.3
 tqdm==4.66.1
 matplotlib
 scipy
+pydot==2.0.0
+
