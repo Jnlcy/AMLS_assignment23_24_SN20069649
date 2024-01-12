@@ -1,7 +1,7 @@
 import sys
 sys.path.append('./')
 
-from A.dataset import get_loader,montage2d,montage_and_save
+from A.dataset_A import get_loader,montage2d,montage_and_save
 import numpy as np
 from tqdm import trange
 import random
