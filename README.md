@@ -2,7 +2,7 @@
 
 This assignment consists of two parts; part A is a binary classification task on the Pneumonia dataset. Three classical machine learning methods are considered, with a final accuracy of 0.8494% using Random Forest. Part B is a multiclass classification task on the Pathmnist dataset. A 9-layered convolutional neural network (CNN) was deployed with 0.8189% accuracy.
 
-## Requirement
+## Requirements
 The requirement packages are stored in 'requirements.txt'; before starting to run scripts in this project, install packages using the following code:
 
 ```bash
